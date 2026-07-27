@@ -48,20 +48,17 @@ jobs:
       - name: Build the site
         run: |
         name: CI
-
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 name: CI
-
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -71,6 +68,18 @@ jobs:
         run: |
           echo "HTML file is ready"
           ls -la
+          name: CI
+name: CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Test
+        run: echo "Waa la xalliyay"
+
+       
 
 
           
