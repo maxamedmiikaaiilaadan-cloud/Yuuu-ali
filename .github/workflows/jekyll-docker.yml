@@ -1,21 +1,470 @@
-name: Jekyll Docker CI
+<!DOCTYPE html>
+<html lang="so">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BIMAL Chat</title>
 
-on:
-  push:
-    branches:
-      - main
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+body{
+    background:#eef2f5;
+    height:100vh;
+}
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+.app{
+    max-width:1200px;
+    height:100vh;
+    margin:auto;
+    background:white;
+    display:flex;
+    overflow:hidden;
+}
 
-      - name: Build Jekyll site
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/srv/jekyll \
-            jekyll/jekyll:latest \
-            jekyll build
+/* LEFT SIDE */
+.sidebar{
+    width:320px;
+    background:#075e54;
+    color:white;
+    display:flex;
+    flex-direction:column;
+}
+
+.logo{
+    padding:22px;
+    font-size:28px;
+    font-weight:bold;
+    background:#064e46;
+}
+
+.search{
+    padding:12px;
+}
+
+.search input{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:20px;
+    outline:none;
+}
+
+.users{
+    overflow-y:auto;
+}
+
+.user{
+    padding:15px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    cursor:pointer;
+    border-bottom:1px solid rgba(255,255,255,.1);
+}
+
+.user:hover{
+    background:#0b6f64;
+}
+
+.avatar{
+    width:45px;
+    height:45px;
+    border-radius:50%;
+    background:#25d366;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+    color:white;
+}
+
+.user-info{
+    flex:1;
+}
+
+.user-info b{
+    display:block;
+}
+
+.user-info small{
+    opacity:.8;
+}
+
+/* CHAT */
+.chat{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+}
+
+.chat-header{
+    height:70px;
+    background:#f7f7f7;
+    display:flex;
+    align-items:center;
+    padding:10px 18px;
+    gap:12px;
+    border-bottom:1px solid #ddd;
+}
+
+.chat-name{
+    font-weight:bold;
+}
+
+.online{
+    font-size:12px;
+    color:#25a244;
+}
+
+.messages{
+    flex:1;
+    padding:20px;
+    overflow-y:auto;
+    background:#e5ddd5;
+}
+
+.message{
+    max-width:70%;
+    padding:10px 14px;
+    margin-bottom:12px;
+    border-radius:12px;
+    word-wrap:break-word;
+}
+
+.received{
+    background:white;
+    margin-right:auto;
+}
+
+.sent{
+    background:#dcf8c6;
+    margin-left:auto;
+}
+
+.input-area{
+    padding:12px;
+    display:flex;
+    gap:8px;
+    background:#f0f0f0;
+}
+
+.input-area input{
+    flex:1;
+    padding:13px 16px;
+    border:none;
+    border-radius:25px;
+    outline:none;
+}
+
+button{
+    border:none;
+    cursor:pointer;
+}
+
+.send{
+    width:48px;
+    height:48px;
+    border-radius:50%;
+    background:#075e54;
+    color:white;
+    font-size:18px;
+}
+
+.emoji{
+    width:45px;
+    background:transparent;
+    font-size:23px;
+}
+
+/* MOBILE */
+@media(max-width:700px){
+
+    .sidebar{
+        width:85px;
+    }
+
+    .logo{
+        font-size:18px;
+        text-align:center;
+        padding:20px 5px;
+    }
+
+    .search{
+        display:none;
+    }
+
+    .user{
+        justify-content:center;
+        padding:12px 5px;
+    }
+
+    .user-info{
+        display:none;
+    }
+
+    .avatar{
+        width:48px;
+        height:48px;
+    }
+
+    .message{
+        max-width:85%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+        <div class="logo">
+            BIMAL
+        </div>
+
+        <div class="search">
+            <input
+                type="text"
+                id="search"
+                placeholder="Search..."
+                onkeyup="searchUsers()"
+            >
+        </div>
+
+        <div class="users" id="users">
+
+            <div class="user" onclick="openChat('Ahmed','A')">
+                <div class="avatar">A</div>
+
+                <div class="user-info">
+                    <b>Ahmed</b>
+                    <small>Online</small>
+                </div>
+            </div>
+
+            <div class="user" onclick="openChat('Yusuf','Y')">
+                <div class="avatar">Y</div>
+
+                <div class="user-info">
+                    <b>Yusuf</b>
+                    <small>Online</small>
+                </div>
+            </div>
+
+            <div class="user" onclick="openChat('Mohamed','M')">
+                <div class="avatar">M</div>
+
+                <div class="user-info">
+                    <b>Mohamed</b>
+                    <small>Offline</small>
+                </div>
+            </div>
+
+            <div class="user" onclick="openChat('Abdi','A')">
+                <div class="avatar">A</div>
+
+                <div class="user-info">
+                    <b>Abdi</b>
+                    <small>Online</small>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="chat">
+
+        <div class="chat-header">
+
+            <div class="avatar" id="headerAvatar">
+                A
+            </div>
+
+            <div>
+                <div class="chat-name" id="chatName">
+                    Ahmed
+                </div>
+
+                <div class="online" id="status">
+                    Online
+                </div>
+            </div>
+
+        </div>
+
+        <div class="messages" id="messages">
+
+            <div class="message received">
+                Salaam 👋
+            </div>
+
+            <div class="message sent">
+                Wcs! Soo dhawoow BIMAL.
+            </div>
+
+        </div>
+
+        <div class="input-area">
+
+            <button class="emoji" onclick="addEmoji()">
+                😊
+            </button>
+
+            <input
+                type="text"
+                id="messageInput"
+                placeholder="Qor fariinta..."
+                onkeydown="handleEnter(event)"
+            >
+
+            <button class="send" onclick="sendMessage()">
+                ➤
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+/* SEND MESSAGE */
+
+function sendMessage(){
+
+    const input =
+        document.getElementById("messageInput");
+
+    const text = input.value.trim();
+
+    if(text === ""){
+        return;
+    }
+
+    const message =
+        document.createElement("div");
+
+    message.className = "message sent";
+
+    message.textContent = text;
+
+    document
+        .getElementById("messages")
+        .appendChild(message);
+
+    input.value = "";
+
+    scrollMessages();
+}
+
+
+/* ENTER TO SEND */
+
+function handleEnter(event){
+
+    if(event.key === "Enter"){
+        sendMessage();
+    }
+
+}
+
+
+/* SCROLL */
+
+function scrollMessages(){
+
+    const messages =
+        document.getElementById("messages");
+
+    messages.scrollTop =
+        messages.scrollHeight;
+}
+
+
+/* OPEN CHAT */
+
+function openChat(name, letter){
+
+    document
+        .getElementById("chatName")
+        .textContent = name;
+
+    document
+        .getElementById("headerAvatar")
+        .textContent = letter;
+
+    document
+        .getElementById("messages")
+        .innerHTML = `
+            <div class="message received">
+                Salaam 👋
+            </div>
+
+            <div class="message received">
+                Waxaad hadda la sheekaysanaysaa ${name}.
+            </div>
+        `;
+
+}
+
+
+/* EMOJI */
+
+function addEmoji(){
+
+    const input =
+        document.getElementById("messageInput");
+
+    input.value += " 😊";
+
+    input.focus();
+
+}
+
+
+/* SEARCH USERS */
+
+function searchUsers(){
+
+    const search =
+        document
+        .getElementById("search")
+        .value
+        .toLowerCase();
+
+    const users =
+        document.querySelectorAll(".user");
+
+    users.forEach(user => {
+
+        const name =
+            user
+            .querySelector("b")
+            .textContent
+            .toLowerCase();
+
+        if(name.includes(search)){
+            user.style.display = "flex";
+        }else{
+            user.style.display = "none";
+        }
+
+    });
+
+}
+
+</script>
+
+</body>
+</html>
